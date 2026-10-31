@@ -19,7 +19,6 @@
 	$effect(() => {
 		if (form?.message) adding = true;
 	});
-	const formOpen = $derived(adding);
 
 	/** Move focus into the form when it opens, so keyboard users land in it. */
 	function focusFirst(node: HTMLElement) {
@@ -31,14 +30,14 @@
 
 <div class="page-head">
 	<h1>Clients</h1>
-	{#if data.clients.length > 0 || formOpen}
-		<button class="secondary" aria-expanded={formOpen} aria-controls="new-client" onclick={() => (adding = !formOpen)}>
-			{#if formOpen}Close{:else}<Icon name="plus" />Add a client{/if}
+	{#if data.clients.length > 0 || adding}
+		<button class="secondary" aria-expanded={adding} aria-controls="new-client" onclick={() => (adding = !adding)}>
+			{#if adding}Close{:else}<Icon name="plus" />Add a client{/if}
 		</button>
 	{/if}
 </div>
 
-{#if formOpen}
+{#if adding}
 	<section class="card" id="new-client" use:focusFirst>
 		<h2 class="form-title">New client</h2>
 		{#if form?.message && !nameInvalid}<p class="problem" role="alert">{form.message}</p>{/if}
@@ -65,7 +64,7 @@
 {/if}
 
 {#if data.clients.length === 0}
-	{#if !formOpen}
+	{#if !adding}
 		<EmptyState message="No clients yet.">
 			<button onclick={() => (adding = true)}><Icon name="plus" />Add your first client</button>
 		</EmptyState>

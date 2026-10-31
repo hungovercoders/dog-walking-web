@@ -20,7 +20,6 @@
 	$effect(() => {
 		if (failedForm === 'update') editing = true;
 	});
-	const editOpen = $derived(editing);
 
 	// A failed add keeps the form open, showing what went wrong.
 	$effect(() => {
@@ -44,16 +43,16 @@
 <a class="back" href="/clients"><Icon name="left" />Clients</a>
 <div class="page-head">
 	<h1>{client.name}</h1>
-	<button class="secondary" aria-expanded={editOpen} aria-controls="client-edit" onclick={() => (editing = !editOpen)}>
-		{#if editOpen}Close{:else}<Icon name="edit" />Edit{/if}
+	<button class="secondary" aria-expanded={editing} aria-controls="client-edit" onclick={() => (editing = !editing)}>
+		{#if editing}Close{:else}<Icon name="edit" />Edit{/if}
 	</button>
 </div>
 
-{#if form?.message && failedForm !== 'addDog' && failedForm !== 'delete' && !nameInvalid('update')}
+{#if form?.message && failedForm !== 'addDog' && failedForm !== 'delete' && !nameInvalid('update') && (failedForm !== 'update' || editing)}
 	<p class="problem" role="alert">{form.message}</p>
 {/if}
 
-{#if editOpen}
+{#if editing}
 	<section class="card" id="client-edit" use:focusFirst>
 		<form
 			class="stack"
