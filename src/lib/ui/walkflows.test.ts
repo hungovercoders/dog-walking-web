@@ -102,6 +102,8 @@ describe('schedule defaults', () => {
 		expect(defaultStart(Date.parse('2026-10-22T08:10:00Z'), 'Europe/London')).toBe('2026-10-22T09:30');
 		expect(defaultStart(Date.parse('2026-10-22T08:30:00Z'), 'Europe/London')).toBe('2026-10-22T10:00');
 		expect(defaultStart(Date.parse('2026-10-22T08:10:00Z'), 'Europe/London', '2026-10-24')).toBe('2026-10-24T09:00');
+		// Today's 09:00 has passed by 14:30: today means the next half hour.
+		expect(defaultStart(Date.parse('2026-10-22T13:30:00Z'), 'Europe/London', '2026-10-22')).toBe('2026-10-22T15:00');
 	});
 	it('books again at the same wall-clock time across a DST change', () => {
 		// 09:00 BST on 22 Oct; clocks go back on 25 Oct; next week is 09:00 GMT.

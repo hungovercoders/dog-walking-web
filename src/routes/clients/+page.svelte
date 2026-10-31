@@ -15,7 +15,11 @@
 	const nameInvalid = $derived(v.field === 'name');
 	const shown = $derived(filterRoster(data.clients, query));
 	const counts = $derived(rosterCounts(data.clients));
-	const formOpen = $derived(adding || Boolean(form?.message));
+	// A failed add opens the form to show what went wrong; Close still closes it.
+	$effect(() => {
+		if (form?.message) adding = true;
+	});
+	const formOpen = $derived(adding);
 
 	/** Move focus into the form when it opens, so keyboard users land in it. */
 	function focusFirst(node: HTMLElement) {

@@ -53,10 +53,17 @@ export function resolveLocale(header: string | null | undefined, fallback = 'en-
 	return fallback;
 }
 
-/** Whether the locale writes times on a 24-hour clock. */
+const hourCycles = new Map<string | undefined, boolean>();
+
+/** Whether the locale writes times on a 24-hour clock (looked up once per locale). */
 export function uses24h(locale?: string): boolean {
-	const cycle = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
-	return cycle === 'h23' || cycle === 'h24';
+	let is24 = hourCycles.get(locale);
+	if (is24 === undefined) {
+		const cycle = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).resolvedOptions().hourCycle;
+		is24 = cycle === 'h23' || cycle === 'h24';
+		hourCycles.set(locale, is24);
+	}
+	return is24;
 }
 
 /** A time of day: "09:00" in 24-hour locales, "9:00 AM" in 12-hour ones. */

@@ -3,11 +3,13 @@ import { isoToZonedLocal, shiftDay, zonedLocalToIso } from '$lib/api';
 export const DURATION_PRESETS = [30, 45, 60] as const;
 
 /** The default start for a new walk, as a datetime-local value in `tz`:
- * 09:00 on `day` when one is given, else the next half hour from now. */
+ * the next half hour from now, or 09:00 on `day` when it is another day
+ * (today's 09:00 may already have passed). */
 export function defaultStart(nowMs: number, tz: string, day?: string | null): string {
-	if (day) return `${day}T09:00`;
 	const next = Math.ceil((nowMs + 1) / 1_800_000) * 1_800_000;
-	return isoToZonedLocal(new Date(next).toISOString(), tz);
+	const nextHalfHour = isoToZonedLocal(new Date(next).toISOString(), tz);
+	if (day && day !== isoToZonedLocal(new Date(nowMs).toISOString(), tz).slice(0, 10)) return `${day}T09:00`;
+	return nextHalfHour;
 }
 
 /** The same wall-clock time seven days later, as a datetime-local value in `tz`

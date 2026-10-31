@@ -16,7 +16,11 @@
 	const failedForm = $derived(v.form);
 	const nameInvalid = (which: string) => failedForm === which && v.field === 'name';
 	const client = $derived(data.client);
-	const editOpen = $derived(editing || failedForm === 'update');
+	// A failed save opens the editor to show what went wrong; Close still closes it.
+	$effect(() => {
+		if (failedForm === 'update') editing = true;
+	});
+	const editOpen = $derived(editing);
 
 	// A failed add keeps the form open, showing what went wrong.
 	$effect(() => {
