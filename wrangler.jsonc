@@ -13,7 +13,7 @@
 	// `wrangler secret put`; PUBLIC_CLERK_PUBLISHABLE_KEY and API_BASE_URL are
 	// plain vars - override them per environment in the dashboard or here.
 	"vars": {
-		"API_BASE_URL": "https://dog-walking-api.example.workers.dev",
+		"API_BASE_URL": "https://dog-walking-api.griff182uk.workers.dev",
 		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_replace_me"
 	}
 }
