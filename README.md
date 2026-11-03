@@ -9,8 +9,8 @@ owns none of their contracts.
 
 | repo | role |
 | --- | --- |
-| [dog-walking-spec](https://github.com/dataGriff/dog-walking-spec) | the contracts of record: OpenAPI, AsyncAPI, Gherkin features and data contracts for the `clients` and `walks` services, gated with [sysspec](https://github.com/hungovercoders/sysspec) |
-| [dog-walking-api](https://github.com/dataGriff/dog-walking-api) | the implementation of both services (Hono on Workers, D1, Queues) |
+| [dog-walking-spec](https://github.com/hungovercoders/dog-walking-spec) | the contracts of record: OpenAPI, AsyncAPI, Gherkin features and data contracts for the `clients` and `walks` services, gated with [sysspec](https://github.com/hungovercoders/sysspec) |
+| [dog-walking-api](https://github.com/hungovercoders/dog-walking-api) | the implementation of both services (Hono on Workers, D1, Queues) |
 | **dog-walking-web** (this) | the UI, built against the pinned contracts and their mocks |
 
 `contracts.lock` names the released contract surface this app is built
