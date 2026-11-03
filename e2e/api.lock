@@ -1,4 +1,4 @@
 # The dog-walking-api commit `task screens` runs to seed and serve the pages.
 # Bump it when the UI needs a newer API; CI checks this exact sha out to .api/.
 repo: hungovercoders/dog-walking-api
-sha: 0c82deb4b3a093a90bb73de8633a987761ef59a1
+sha: 3b5bb65fac947ce06b663aeafffe0394130c10ef
