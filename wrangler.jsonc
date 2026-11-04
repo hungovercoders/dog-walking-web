@@ -15,5 +15,16 @@
 	"vars": {
 		"API_BASE_URL": "https://dog-walking-api.griff182uk.workers.dev",
 		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnVuLWFzcC03MDc1LmNsZXJrLmFjY291bnRzLmRldiQ"
+	},
+	// Worker Previews (`wrangler preview`, run by .github/workflows/preview.yml)
+	// do not inherit the production settings above, so the vars are repeated.
+	// CLERK_SECRET_KEY is set once on the Previews Base: in the dashboard under
+	// the Worker's Variables and Secrets with the Previews Base toggle, or with
+	// `npx wrangler preview base-config secret put CLERK_SECRET_KEY`.
+	"previews": {
+		"vars": {
+			"API_BASE_URL": "https://dog-walking-api.griff182uk.workers.dev",
+			"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnVuLWFzcC03MDc1LmNsZXJrLmFjY291bnRzLmRldiQ"
+		}
 	}
 }

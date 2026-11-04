@@ -140,6 +140,19 @@ push to `main`. It needs the repository secrets `CLOUDFLARE_API_TOKEN` and
 
 Add the deployed hostname to the Clerk application's allowed origins.
 
+### Previews
+
+`.github/workflows/preview.yml` deploys every pull request to a
+[Worker Preview](https://developers.cloudflare.com/workers/previews/) and
+comments the URL on the PR. There is one Preview, named `preview`, so its
+origin is stable and can be listed in the API's `CLERK_AUTHORIZED_PARTIES`;
+the newest push to any open PR is what it serves. Previews do not inherit
+production settings: the vars live in the `previews` block of
+`wrangler.jsonc`, and `CLERK_SECRET_KEY` is set once on the Previews Base
+(dashboard, or `npx wrangler preview base-config secret put
+CLERK_SECRET_KEY`). The Preview is recreated on every run so it always
+starts from that base, and deleted when the PR closes.
+
 ## Layout
 
 ```
