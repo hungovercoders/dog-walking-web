@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import { createClientsApi, createWalksApi, describeProblem } from '$lib/api';
 
@@ -19,9 +20,27 @@ export async function api(event: RequestEvent) {
 	const token = env.API_DEV_BEARER || (await event.locals.auth().getToken());
 	if (!token) error(401, 'No session');
 	return {
-		clients: createClientsApi(clientsUrl, token, event.fetch),
-		walks: createWalksApi(walksUrl, token, event.fetch)
+		clients: createClientsApi(clientsUrl, token, apiFetch(event, clientsUrl)),
+		walks: createWalksApi(walksUrl, token, apiFetch(event, walksUrl))
 	};
+}
+
+/**
+ * How a request reaches the API. On Cloudflare, one Worker cannot call another
+ * on the same workers.dev zone with plain `fetch` (the edge answers 404), so the
+ * deployed app goes through the `API` service binding declared in
+ * wrangler.jsonc. Locally there is no binding: the API or the mocks run on
+ * localhost and ordinary fetch reaches them.
+ */
+function apiFetch(event: RequestEvent, baseUrl: string): typeof fetch {
+	const binding = event.platform?.env?.API;
+	if (dev || !binding || isLocal(baseUrl)) return event.fetch;
+	return (input, init) => binding.fetch(input, init);
+}
+
+function isLocal(url: string): boolean {
+	const host = new URL(url).hostname;
+	return host === 'localhost' || host === '127.0.0.1';
 }
 
 /** Throw a SvelteKit error for a failed load, with the contract's message. */

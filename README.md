@@ -137,6 +137,14 @@ push to `main`. It needs the repository secrets `CLOUDFLARE_API_TOKEN` and
 - `CLERK_SECRET_KEY` as a secret: `npx wrangler secret put CLERK_SECRET_KEY`
 - `PUBLIC_CLERK_PUBLISHABLE_KEY` and `API_BASE_URL` as vars (edit
   `wrangler.jsonc` or set them in the dashboard)
+- the `API` service binding to `dog-walking-api` (in `wrangler.jsonc`). A
+  Worker cannot call another Worker on the same workers.dev zone with plain
+  `fetch`, so the deployed app sends every API request through the binding;
+  `API_BASE_URL` only supplies the URL they are built with. Locally
+  (`npm run dev`, `task screens`, the mocks) there is no binding and the app
+  fetches localhost directly. `npm run preview` needs the API worker in the
+  same `wrangler dev` session for the binding to resolve:
+  `npx wrangler dev -c wrangler.jsonc -c ../dog-walking-api/wrangler.jsonc`.
 
 Add the deployed hostname to the Clerk application's allowed origins.
 

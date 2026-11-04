@@ -10,6 +10,8 @@ declare global {
 		// interface PageState {}
 		interface Platform {
 			env?: {
+				/** Service binding to dog-walking-api (wrangler.jsonc); absent locally. */
+				API?: Fetcher;
 				API_BASE_URL?: string;
 				API_CLIENTS_URL?: string;
 				API_WALKS_URL?: string;
