@@ -1,0 +1,105 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: npm ci
+      - name: Fetch the pinned contracts
+        run: task contracts:fetch
+      - name: Generated types must match the pinned contracts
+        run: task types:check
+      - run: npm run check
+      - run: npx vitest run
+      - run: npm run build
+
+  # The consumer's contract check: the generated clients against the pinned
+  # Microcks mocks of both services (tests/mocks.test.ts). Same stack the spec
+  # and API repos run in their CI.
+  mocks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: npm ci
+      - name: Fetch the pinned contracts
+        run: task contracts:fetch
+      - name: Start the mock stack and load both services
+        run: task mocks:up
+      - name: Generated clients against the mocks
+        run: npx vitest run tests
+        env:
+          MOCKS_BASE_URL: http://localhost:8585/rest
+      - name: Stop the mock stack
+        if: always()
+        run: '[ -d .contracts/walks ] && task mocks:down || true'
+
+  # Screenshots of every main page (phone and desktop, light and dark) and an
+  # axe accessibility check, against the pinned API seeded with a demo week.
+  # The screenshots are uploaded for review; axe fails the job on serious or
+  # critical violations.
+  screens:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read the pinned API
+        id: api
+        run: |
+          echo "repo=$(awk '$1=="repo:"{print $2}' e2e/api.lock)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(awk '$1=="sha:"{print $2}' e2e/api.lock)" >> "$GITHUB_OUTPUT"
+      # A private API repository needs an API_REPO_TOKEN secret (a fine-grained
+      # token with read access to it); the default token only reads this repo.
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.api.outputs.repo }}
+          ref: ${{ steps.api.outputs.sha }}
+          path: .api
+          token: ${{ secrets.API_REPO_TOKEN || github.token }}
+      - uses: jdx/mise-action@v2
+      - run: npm ci
+      - name: Install the pinned API's dependencies
+        run: npm ci --no-audit --no-fund
+        working-directory: .api
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Seed, serve and capture
+        run: task screens
+      - name: Upload screenshots
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: e2e/screenshots/
+          if-no-files-found: warn
+      - name: Upload the Playwright results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: e2e/test-results/
+          if-no-files-found: ignore
+      - name: Summary
+        if: always()
+        env:
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          {
+            echo "### Screenshots"
+            [ -n "$ARTIFACT_URL" ] && echo "[Download all screenshots]($ARTIFACT_URL)"
+            echo
+            ls e2e/screenshots 2>/dev/null | sed 's/^/- /'
+          } >> "$GITHUB_STEP_SUMMARY"

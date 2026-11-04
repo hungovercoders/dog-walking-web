@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Contract pin updates for the dog-walking-web consumer. One-time setup: install the Renovate app and enable 'Allow auto-merge' on the repo, with branch protection requiring the ci check.",
+  "extends": ["config:recommended"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^contracts\\.lock$/"],
+      "matchStrings": [
+        "version: clients\\/v(?<currentValue>[0-9.]+)\\s+sha: (?<currentDigest>[a-f0-9]{40})"
+      ],
+      "depNameTemplate": "sysspec/clients",
+      "packageNameTemplate": "https://github.com/hungovercoders/dog-walking-spec",
+      "datasourceTemplate": "git-tags",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^clients/v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^contracts\\.lock$/"],
+      "matchStrings": [
+        "version: walks\\/v(?<currentValue>[0-9.]+)\\s+sha: (?<currentDigest>[a-f0-9]{40})"
+      ],
+      "depNameTemplate": "sysspec/walks",
+      "packageNameTemplate": "https://github.com/hungovercoders/dog-walking-spec",
+      "datasourceTemplate": "git-tags",
+      "versioningTemplate": "semver",
+      "extractVersionTemplate": "^walks/v(?<version>.+)$"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDepNames": ["sysspec/clients", "sysspec/walks"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "platformAutomerge": true
+    },
+    {
+      "matchDepNames": ["sysspec/clients", "sysspec/walks"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["contract-major"]
+    }
+  ]
+}

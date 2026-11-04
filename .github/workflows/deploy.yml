@@ -1,0 +1,36 @@
+# Deploys the SvelteKit app to Cloudflare Workers on every push to main.
+#
+# One-time setup (repository secrets):
+#   CLOUDFLARE_API_TOKEN   - a token with Workers Scripts:Edit
+#   CLOUDFLARE_ACCOUNT_ID  - the account to deploy into
+# Worker configuration (set once in the Cloudflare dashboard or with wrangler):
+#   wrangler secret put CLERK_SECRET_KEY
+#   vars in wrangler.jsonc: PUBLIC_CLERK_PUBLISHABLE_KEY, API_BASE_URL
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: npm ci
+      - run: npm run build
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
