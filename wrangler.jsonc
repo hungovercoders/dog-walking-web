@@ -14,6 +14,6 @@
 	// plain vars - override them per environment in the dashboard or here.
 	"vars": {
 		"API_BASE_URL": "https://dog-walking-api.griff182uk.workers.dev",
-		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_replace_me"
+		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnVuLWFzcC03MDc1LmNsZXJrLmFjY291bnRzLmRldiQ"
 	}
 }
