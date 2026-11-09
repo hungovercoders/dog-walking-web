@@ -31,6 +31,9 @@ describe('errorCopy', () => {
 	it('speaks plainly per status', () => {
 		expect(errorCopy(404).title).toBe('Not found');
 		expect(errorCopy(401).title).toBe('Please sign in again');
+		expect(errorCopy(401, undefined, true).title).toBe('Your sign-in wasn’t accepted');
+		expect(errorCopy(403, undefined, true).title).toBe('Your sign-in wasn’t accepted');
+		expect(errorCopy(404, undefined, true).title).toBe('Not found');
 		expect(errorCopy(503).title).toBe('We couldn’t reach the server');
 		expect(errorCopy(418, 'Teapot').detail).toBe('Teapot');
 	});

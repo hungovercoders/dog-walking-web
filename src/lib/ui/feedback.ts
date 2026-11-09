@@ -40,9 +40,18 @@ export function toastFor(result: ResultLike, success?: string, toastErrors = fal
 	}
 }
 
-/** Title and explanation for an error page, by HTTP status. */
-export function errorCopy(status: number, message?: string): { title: string; detail: string } {
+/** Title and explanation for an error page, by HTTP status. `signedIn` is
+ * whether the walker still has a session here: a 401 or 403 with one means
+ * the API refused a session this app accepts, and signing in again from the
+ * same session cannot fix that. */
+export function errorCopy(status: number, message?: string, signedIn = false): { title: string; detail: string } {
 	if (status === 404) return { title: 'Not found', detail: 'That page or record no longer exists.' };
+	if ((status === 401 || status === 403) && signedIn) {
+		return {
+			title: 'Your sign-in wasn’t accepted',
+			detail: 'You are signed in, but the walks service refused your session. Sign out and sign in again; if this keeps happening, the service needs setting up for this site.'
+		};
+	}
 	if (status === 401 || status === 403) return { title: 'Please sign in again', detail: 'Your session has ended.' };
 	if (status >= 500) return { title: 'We couldn’t reach the server', detail: 'Check your connection and try again in a moment.' };
 	return { title: 'Something went wrong', detail: message || 'Try again.' };
