@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { withClerkHandler } from 'svelte-clerk/server';
 import { env } from '$env/dynamic/private';
 import { resolveLocale } from '$lib/api';
+import { safeRedirectPath } from '$lib/server/redirect';
 
 /** Routes a signed-out visitor may see. Everything else needs a session. */
 const PUBLIC_ROUTES = [/^\/sign-in(\/|$)/, /^\/sign-up(\/|$)/];
@@ -32,7 +33,16 @@ const guard: Handle = ({ event, resolve }) => {
 		// nothing to sign in to.
 		redirect(303, '/');
 	}
-	if (!isPublic && !event.locals.auth().userId) {
+	const signedIn = Boolean(event.locals.auth().userId);
+	if (isPublic && signedIn) {
+		// Clerk's <SignIn> and <SignUp> render nothing for a walker who already
+		// has a session, which left a signed-in visitor on an empty page. Send
+		// them where they were going instead.
+		const next = safeRedirectPath(event.url.searchParams.get('redirect_url'), event.url);
+		const nextIsPublic = next !== null && PUBLIC_ROUTES.some((re) => re.test(next.split('?')[0]));
+		redirect(303, next && !nextIsPublic ? next : '/');
+	}
+	if (!isPublic && !signedIn) {
 		const next = encodeURIComponent(event.url.pathname + event.url.search);
 		redirect(303, `/sign-in?redirect_url=${next}`);
 	}
