@@ -51,7 +51,10 @@ jobs:
   # The screenshots are uploaded for review; axe fails the job on serious or
   # critical violations.
   screens:
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.56 cannot install Chromium on the image
+    # ubuntu-latest now points at (26.04). Return to ubuntu-latest once
+    # Playwright is on a version that supports it.
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
