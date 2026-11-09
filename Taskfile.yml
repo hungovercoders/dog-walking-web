@@ -1,0 +1,93 @@
+version: "3"
+
+vars:
+  SPECS_REPO: hungovercoders/dog-walking-spec
+  SERVICES: clients walks
+
+tasks:
+  contracts:fetch:
+    desc: Fetch each pinned contract surface (and the spec repo's mock toolchain) into read-only .contracts/<service>/
+    cmds:
+      - |
+        set -e
+        for service in {{.SERVICES}}; do
+          sha=$(awk -v s="$service" '$1=="version:" && index($2, s "/v")==1 {want=1; next} want && $1=="sha:" {print $2; exit}' contracts.lock)
+          [ -n "$sha" ] || { echo "contracts.lock has no sha for $service" >&2; exit 1; }
+          dir=.contracts/$service
+          chmod -R u+w "$dir" 2>/dev/null || true
+          rm -rf "$dir" && git init -q "$dir"
+          git -C "$dir" remote add origin https://github.com/{{.SPECS_REPO}}
+          git -C "$dir" sparse-checkout set "specs/$service" mocks cli
+          git -C "$dir" fetch -q --depth 1 origin "$sha"
+          git -C "$dir" checkout -q FETCH_HEAD
+          chmod -R a-w "$dir/specs"
+          echo "fetched $service @ $sha into $dir"
+        done
+
+  types:generate:
+    desc: Regenerate the typed API surface from the pinned OpenAPI contracts (committed; CI checks it is current)
+    cmds:
+      - |
+        set -e
+        mkdir -p src/lib/api/generated
+        for service in {{.SERVICES}}; do
+          spec=$(ls .contracts/$service/specs/$service/openapi/*.yaml | head -1)
+          npx openapi-typescript "$spec" -o "src/lib/api/generated/$service.d.ts"
+        done
+
+  types:check:
+    desc: Fail when the committed generated types drift from the pinned contracts
+    deps: [types:generate]
+    cmds:
+      - git diff --exit-code -- src/lib/api/generated
+
+  mocks:up:
+    desc: Start the pinned mock stack and load both services (needs Docker)
+    cmds:
+      - task -d .contracts/clients mocks:load SERVICE=clients
+      - task -d .contracts/walks mocks:load SERVICE=walks
+
+  mocks:down:
+    desc: Stop the pinned mock stack
+    cmds:
+      - task -d .contracts/walks mocks:down
+
+  check:
+    desc: Type-check Svelte and TypeScript
+    cmds:
+      - npm run check
+
+  test:
+    desc: Unit tests (pure helpers); set MOCKS_BASE_URL to also run the mock-backed client tests
+    cmds:
+      - npx vitest run
+
+  contracts:verify:
+    desc: The consumer's definition of done - types current, checks green, tests green against the pinned mocks (MOCKS_BASE_URL=http://localhost:8585/rest)
+    cmds:
+      - task: types:check
+      - task: check
+      - task: test
+      - npm run build
+
+  screens:
+    desc: Seed the pinned API (e2e/api.lock) with a demo week, start the web app against it, and capture screenshots and axe checks into e2e/screenshots/
+    cmds:
+      - bash scripts/screens.sh
+
+  dev:
+    cmds:
+      - npm run dev
+
+  dev:mocks:
+    desc: Run the UI against the pinned Microcks mocks (start them first with `task mocks:up`)
+    env:
+      API_CLIENTS_URL: http://localhost:8585/rest/Clients+API/1.0.0
+      API_WALKS_URL: http://localhost:8585/rest/Walks+API/1.0.0
+      API_DEV_BEARER: mock
+    cmds:
+      - npm run dev
+
+  build:
+    cmds:
+      - npm run build

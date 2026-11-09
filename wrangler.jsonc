@@ -1,0 +1,37 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "dog-walking-web",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-10-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"observability": { "enabled": true },
+	// The app calls the API through this binding: a Worker cannot reach another
+	// Worker on the same workers.dev zone with plain fetch. API_BASE_URL below
+	// still supplies the URL the requests are built with.
+	"services": [{ "binding": "API", "service": "dog-walking-api" }],
+	// Non-secret configuration. Secrets (CLERK_SECRET_KEY) are set with
+	// `wrangler secret put`; PUBLIC_CLERK_PUBLISHABLE_KEY and API_BASE_URL are
+	// plain vars - override them per environment in the dashboard or here.
+	"vars": {
+		"API_BASE_URL": "https://dog-walking-api.griff182uk.workers.dev",
+		"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnVuLWFzcC03MDc1LmNsZXJrLmFjY291bnRzLmRldiQ"
+	},
+	// Worker Previews (`wrangler preview`, run by .github/workflows/preview.yml)
+	// do not inherit the production settings above, so the vars are repeated.
+	// CLERK_SECRET_KEY is set once on the Previews Base: in the dashboard under
+	// the Worker's Variables and Secrets with the Previews Base toggle, or with
+	// `npx wrangler preview base-config secret put CLERK_SECRET_KEY`.
+	"previews": {
+		"observability": { "enabled": true },
+		// A Preview's service binding calls the API's production deployment.
+		"services": [{ "binding": "API", "service": "dog-walking-api" }],
+		"vars": {
+			"API_BASE_URL": "https://dog-walking-api.griff182uk.workers.dev",
+			"PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_test_ZnVuLWFzcC03MDc1LmNsZXJrLmFjY291bnRzLmRldiQ"
+		}
+	}
+}

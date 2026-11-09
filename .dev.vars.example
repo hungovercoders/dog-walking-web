@@ -1,0 +1,8 @@
+# Copy to .dev.vars for `wrangler dev` (npm run preview) - the Worker reads these
+# as bindings; Vite's `npm run dev` uses .env instead.
+CLERK_SECRET_KEY=sk_test_...
+PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+API_BASE_URL=http://localhost:8787
+# API_CLIENTS_URL=http://localhost:8585/rest/Clients+API/1.0.0
+# API_WALKS_URL=http://localhost:8585/rest/Walks+API/1.0.0
+# API_DEV_BEARER=test:walker-anna

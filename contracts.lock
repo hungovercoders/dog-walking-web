@@ -1,0 +1,9 @@
+# Contract pins - each version is a spec repo release tag, each sha its
+# commit. Renovate bumps them (see renovate.json); task contracts:fetch
+# resolves them into .contracts/<service>/.
+# clients - the roster (Client and Dog)
+version: clients/v1.0.0
+sha: 6e54ca0ecb88205f3cd2dfd787ba705f9dc03f79
+# walks - the Walk aggregate
+version: walks/v1.0.0
+sha: 6e54ca0ecb88205f3cd2dfd787ba705f9dc03f79

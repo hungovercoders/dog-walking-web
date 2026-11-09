@@ -1,0 +1,70 @@
+# Deploys every pull request to a Worker Preview and comments the URL.
+#
+# One Preview, named `preview`, so its origin is stable and can be listed in
+# the API's CLERK_AUTHORIZED_PARTIES. The newest push to any open PR wins. The
+# Preview is recreated on every run so it always starts from the Previews Base
+# (where CLERK_SECRET_KEY lives, set once in the dashboard or with
+# `wrangler preview base-config secret put`), and deleted when the PR closes.
+# Vars come from the `previews` block of wrangler.jsonc.
+name: preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    # Secrets are not available to pull requests from forks.
+    if: github.event.action != 'closed' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: npm ci
+      - run: npm run build
+      - name: Create the Preview
+        id: preview
+        run: |
+          set -o pipefail
+          npx wrangler preview delete --name preview --skip-confirmation 2>/dev/null || true
+          output="$(npx wrangler preview --name preview --json \
+            --message "PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.head.sha }}")"
+          printf '%s\n' "$output"
+          # wrangler prints its banner before the JSON; keep from the first `{`.
+          preview_url="$(printf '%s\n' "$output" | sed -n '/^{/,$p' | jq -er '.preview.urls[0]')"
+          echo "preview_url=$preview_url" >> "$GITHUB_OUTPUT"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Comment the Preview URL
+        run: |
+          gh pr comment "${{ github.event.pull_request.number }}" --edit-last --create-if-none --body "$BODY"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BODY: |
+            **Preview:** ${{ steps.preview.outputs.preview_url }}
+
+            Deployed from ${{ github.event.pull_request.head.sha }}. The Preview is shared, so the newest push to any open pull request replaces it.
+
+  cleanup:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v2
+      - run: npm ci
+      - name: Delete the Preview
+        run: npx wrangler preview delete --name preview --skip-confirmation || true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
